@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Sala 1 – Minhas reservas e Consultar horários</title>
+<style>
+:root{
+  --bg:#eef3ee; --surface:#ffffff; --ink:#1b2a22; --muted:#55645b;
+  --line:#c9d5cb; --accent:#1f5c3f; --accent-ink:#ffffff; --free:#1f5c3f; --free-bg:#dff0e4; --busy:#8a2b1f; --busy-bg:#f7dfda;
+  color-scheme:light;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#121a15; --surface:#1b261f; --ink:#e8f0ea; --muted:#9fb0a5;
+    --line:#33443a; --accent:#7fd6a2; --accent-ink:#0f1a13; --free:#9be8b8; --free-bg:#1f3a2a; --busy:#f3b3a8; --busy-bg:#4a2620;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#121a15; --surface:#1b261f; --ink:#e8f0ea; --muted:#9fb0a5;
+  --line:#33443a; --accent:#7fd6a2; --accent-ink:#0f1a13; --free:#9be8b8; --free-bg:#1f3a2a; --busy:#f3b3a8; --busy-bg:#4a2620;
+  color-scheme:dark;
+}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{
+  margin:0; min-height:100vh; background:var(--bg); color:var(--ink);
+  font-family:"Atkinson Hyperlegible","Segoe UI",system-ui,sans-serif; line-height:1.5;
+  display:flex; justify-content:center; padding:24px 16px;
+}
+main{flex:1; min-width:0; max-width:920px}
+h1{font-family:Georgia,"Times New Roman",serif; font-size:2rem; margin:0 0 4px; letter-spacing:-.01em}
+p.sub{margin:0 0 16px; color:var(--muted)}
+.top{display:flex; flex-wrap:wrap; gap:12px; align-items:center; justify-content:space-between; margin-bottom:20px}
+.screens{display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:20px; align-items:start}
+.panel{background:var(--surface); border:2px solid var(--line); border-radius:14px; padding:20px}
+.tag{font-size:.8rem; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); margin:0 0 2px}
+h2{font-family:Georgia,"Times New Roman",serif; font-size:1.5rem; margin:0 0 16px}
+.btn{
+  width:100%; font:inherit; font-size:1.05rem; font-weight:700; padding:13px;
+  border:2px solid var(--accent); border-radius:10px; background:var(--accent); color:var(--accent-ink); cursor:pointer;
+}
+.btn.sec{background:transparent; color:var(--ink); border-color:var(--line)}
+.btn.danger{background:var(--busy); border-color:var(--busy); color:var(--accent-ink)}
+.btn.small{width:auto; padding:8px 14px; font-size:.95rem}
+.btn:focus-visible{outline:3px solid var(--ink); outline-offset:3px}
+.row{display:grid; grid-template-columns:1fr 1fr; gap:10px}
+[hidden]{display:none !important}
+
+/* Tela 1 */
+.reserva{border:2px solid var(--line); border-radius:12px; padding:16px; margin-bottom:14px; background:var(--bg)}
+.reserva .nome{font-size:1.25rem; font-weight:700; margin:0}
+.reserva .det{margin:0 0 10px; color:var(--muted)}
+.badge{display:inline-block; padding:4px 12px; border-radius:999px; font-weight:700; font-size:.95rem; border:2px solid}
+.badge.ativa{background:var(--free-bg); color:var(--free); border-color:var(--free)}
+.badge.cancelada{background:var(--busy-bg); color:var(--busy); border-color:var(--busy)}
+.confirma{border:2px dashed var(--busy); border-radius:12px; padding:14px; margin-bottom:6px}
+.confirma p{margin:0 0 12px; font-weight:700}
+.msg{margin:12px 0 0; min-height:1.5em; font-weight:700; text-align:center}
+
+/* Tela 2 */
+fieldset{border:0; padding:0; margin:0 0 16px}
+legend{font-weight:700; margin-bottom:10px; padding:0}
+.slots{display:grid; grid-template-columns:repeat(2,1fr); gap:10px}
+.slot input{position:absolute; opacity:0; pointer-events:none}
+.slot label{
+  display:block; text-align:center; padding:14px 0; font-size:1.35rem; font-weight:700;
+  border:2px solid var(--line); border-radius:10px; cursor:pointer; background:var(--bg);
+}
+.slot input:checked + label{border-color:var(--accent); background:var(--accent); color:var(--accent-ink)}
+.slot input:focus-visible + label{outline:3px solid var(--accent); outline-offset:3px}
+.result{margin-top:18px; padding-top:14px; border-top:2px dashed var(--line)}
+.result .q{margin:0 0 8px; color:var(--muted); font-size:.95rem; min-height:1.4em}
+#resposta{min-height:64px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:1.8rem; font-weight:700}
+#resposta.livre{background:var(--free-bg); color:var(--free)}
+#resposta.ocupado{background:var(--busy-bg); color:var(--busy)}
+.ferr{display:flex; flex-wrap:wrap; gap:10px; align-items:center; margin-bottom:16px}
+.seg{display:inline-flex; border:2px solid var(--line); border-radius:10px; overflow:hidden; background:var(--surface)}
+.seg button{font:inherit; font-weight:700; padding:8px 14px; border:0; background:transparent; color:var(--ink); cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--accent); color:var(--accent-ink)}
+.seg button:focus-visible{outline:3px solid var(--ink); outline-offset:-3px}
+.btn.falha[aria-pressed="true"]{background:var(--busy); border-color:var(--busy); color:var(--accent-ink)}
+.screens.um{grid-template-columns:minmax(0,440px); justify-content:center}
+
+/* Menu lateral */
+.layout{width:100%; max-width:1200px; display:flex; gap:24px; align-items:flex-start}
+aside{width:260px; flex:none; position:sticky; top:16px; background:var(--surface); border:2px solid var(--line); border-radius:14px; padding:18px}
+.aside-top{display:flex; justify-content:space-between; align-items:center; margin-bottom:4px}
+aside h3{font-family:Georgia,"Times New Roman",serif; font-size:1.3rem; margin:0}
+.grupo{font-size:.8rem; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); margin:16px 0 8px}
+aside .btn{width:100%}
+aside .btn + .btn{margin-top:10px}
+aside .seg{display:flex; flex-direction:column; width:100%}
+aside .seg button{text-align:left; padding:12px 14px}
+aside .seg button + button{border-top:2px solid var(--line)}
+.fechar{display:none; font:inherit; font-size:1.1rem; background:transparent; border:2px solid var(--line); border-radius:8px; color:var(--ink); width:38px; height:38px; cursor:pointer}
+.menu-btn{display:none; font:inherit; font-weight:700; padding:8px 14px; border:2px solid var(--line); border-radius:10px; background:var(--surface); color:var(--ink); cursor:pointer; margin-bottom:12px}
+.fechar:focus-visible,.menu-btn:focus-visible{outline:3px solid var(--ink); outline-offset:3px}
+.overlay{display:none}
+@media (max-width:820px){
+  .layout{display:block}
+  .menu-btn,.fechar{display:inline-block}
+  aside{position:fixed; top:0; left:0; bottom:0; z-index:20; width:min(300px,85vw); border-radius:0 14px 14px 0; padding-top:calc(18px + env(safe-area-inset-top,0px)); overflow-y:auto; transform:translateX(-105%); visibility:hidden}
+  body.menu-aberto aside{transform:none; visibility:visible}
+  body.menu-aberto .overlay{display:block; position:fixed; inset:0; z-index:15; background:rgba(0,0,0,.45)}
+}
+@media (max-width:820px) and (prefers-reduced-motion:no-preference){ aside{transition:transform .2s, visibility .2s} }
+</style>
+</head>
+<body>
+<div class="layout">
+<aside id="menu" aria-label="Menu do protótipo">
+  <div class="aside-top">
+    <h3>Menu</h3>
+    <button type="button" class="fechar" id="fechar" aria-label="Fechar menu">✕</button>
+  </div>
+  <p class="grupo">Tela exibida</p>
+  <div class="seg" role="group" aria-label="Escolher tela">
+    <button type="button" data-vista="1" aria-pressed="true">Tela 1 · Ana</button>
+    <button type="button" data-vista="2" aria-pressed="false">Tela 2 · Estudante</button>
+  </div>
+  <p class="grupo">Teste</p>
+  <button type="button" class="btn sec small falha" id="falha" aria-pressed="false">Ativar falha</button>
+  <button type="button" class="btn sec small" id="reiniciar">Reiniciar teste</button>
+</aside>
+<div class="overlay" id="overlay"></div>
+
+<main>
+  <button type="button" class="menu-btn" id="abrir" aria-controls="menu" aria-expanded="false">☰ Menu</button>
+  <h1>Sala 1</h1>
+  <p class="sub">Protótipo com duas telas que compartilham a mesma informação da reserva.</p>
+
+  
+
+  <div class="screens" id="telas">
+    <!-- TELA 1 -->
+    <section class="panel" id="p1" aria-labelledby="t1">
+      <p class="tag">Tela 1 · Ana</p>
+      <h2 id="t1">Minhas reservas</h2>
+
+      <div class="reserva">
+        <p class="nome">Sala 1 · 10h</p>
+        <p class="det">Reservada por Ana</p>
+        <span class="badge ativa" id="badge">Ativa</span>
+      </div>
+
+      <button type="button" class="btn" id="cancelar">Cancelar reserva</button>
+
+      <div class="confirma" id="confirma" hidden>
+        <p>Deseja cancelar a reserva da Sala 1 às 10h?</p>
+        <div class="row">
+          <button type="button" class="btn danger" id="confirmar">Confirmar</button>
+          <button type="button" class="btn sec" id="voltar">Voltar</button>
+        </div>
+      </div>
+
+      <p class="msg" id="msg1" aria-live="polite"></p>
+    </section>
+
+    <!-- TELA 2 -->
+    <section class="panel" id="p2" aria-labelledby="t2">
+      <p class="tag">Tela 2 · Outro estudante</p>
+      <h2 id="t2">Consultar horários</h2>
+
+      <fieldset>
+        <legend>Sala 1 · Horário</legend>
+        <div class="slots">
+          <div class="slot"><input type="radio" name="h" id="h9" value="9"><label for="h9">9h</label></div>
+          <div class="slot"><input type="radio" name="h" id="h10" value="10"><label for="h10">10h</label></div>
+        </div>
+      </fieldset>
+      <button type="button" class="btn" id="consultar">Consultar</button>
+
+      <div class="result">
+        <p class="q" id="pergunta"></p>
+        <div id="resposta" aria-live="polite"></div>
+      </div>
+    </section>
+  </div>
+</main>
+</div>
+
+<script>
+  // Estado único compartilhado pelas duas telas
+  var S;
+  var falha = false;     // quando ligada, o cancelamento não atualiza a consulta
+  var vista = "1";       // "1" ou "2"
+  function inicial() {
+    // ativa = reserva de Ana (Tela 1); consultaOcupado = o que a Tela 2 enxerga
+    S = { ativa: true, consultaOcupado: true, confirmando: false, msg: "", sel: "10", consultado: true };
+  }
+  // 9h está sempre livre; 10h depende do que a consulta enxerga
+  function livre(h) { return h === "9" ? true : !S.consultaOcupado; }
+
+  function $(id) { return document.getElementById(id); }
+
+  function render() {
+    // Tela 1
+    var b = $("badge");
+    b.textContent = S.ativa ? "Ativa" : "Cancelada";
+    b.className = "badge " + (S.ativa ? "ativa" : "cancelada");
+    $("cancelar").hidden = !(S.ativa && !S.confirmando);
+    $("confirma").hidden = !S.confirmando;
+    $("msg1").textContent = S.msg;
+
+    // Controles: tela visível, falha e alerta de inconsistência
+    $("p1").hidden = vista === "2";
+    $("p2").hidden = vista === "1";
+    $("telas").className = "screens um";
+    document.querySelectorAll("[data-vista]").forEach(function (b) {
+      b.setAttribute("aria-pressed", String(b.getAttribute("data-vista") === vista));
+    });
+    $("falha").setAttribute("aria-pressed", String(falha));
+    $("falha").textContent = falha ? "Falha ativada · desativar" : "Ativar falha";
+
+    // Tela 2
+    $("h" + S.sel).checked = true;
+    var q = $("pergunta"), r = $("resposta");
+    if (!S.consultado) {
+      q.textContent = "Toque em Consultar para ver a situação.";
+      r.textContent = ""; r.className = "";
+    } else {
+      q.textContent = "Sala 1 às " + S.sel + "h:";
+      var l = livre(S.sel);
+      r.textContent = l ? "Livre" : "Ocupado";
+      r.className = l ? "livre" : "ocupado";
+    }
+  }
+
+  $("cancelar").addEventListener("click", function () { S.confirmando = true; S.msg = ""; render(); });
+  $("voltar").addEventListener("click", function () { S.confirmando = false; S.msg = "Reserva mantida."; render(); });
+  $("confirmar").addEventListener("click", function () {
+    S.ativa = false; S.confirmando = false; S.msg = "Reserva cancelada.";
+    if (!falha) S.consultaOcupado = false;   // com a falha ligada, a consulta não é atualizada
+    render();
+  });
+
+  document.querySelectorAll('input[name="h"]').forEach(function (el) {
+    el.addEventListener("change", function () { S.sel = el.value; S.consultado = false; render(); });
+  });
+  $("consultar").addEventListener("click", function () { S.consultado = true; render(); });
+  $("reiniciar").addEventListener("click", function () { inicial(); render(); });
+  $("falha").addEventListener("click", function () {
+    falha = !falha;
+    if (!falha) S.consultaOcupado = S.ativa;   // ao desligar a falha, a consulta volta a refletir a reserva
+    render();
+  });
+  document.querySelectorAll("[data-vista]").forEach(function (b) {
+    b.addEventListener("click", function () { vista = b.getAttribute("data-vista"); render(); menu(false); });
+  });
+
+  // Menu lateral (gaveta em telas estreitas)
+  function menu(abrir) {
+    document.body.classList.toggle("menu-aberto", abrir);
+    $("abrir").setAttribute("aria-expanded", String(abrir));
+    if (abrir) $("fechar").focus();
+  }
+  $("abrir").addEventListener("click", function () { menu(true); });
+  $("fechar").addEventListener("click", function () { menu(false); });
+  $("overlay").addEventListener("click", function () { menu(false); });
+  document.addEventListener("keydown", function (e) { if (e.key === "Escape") menu(false); });
+
+  inicial();
+  render();
+</script>
+</body>
+</html>

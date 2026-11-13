@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Sala 1 – Reserva de sala de estudo</title>
+<style>
+:root{
+  --bg:#eef3ee; --surface:#ffffff; --ink:#1b2a22; --muted:#55645b;
+  --line:#c9d5cb; --accent:#1f5c3f; --accent-ink:#ffffff; --free:#1f5c3f; --free-bg:#dff0e4; --busy:#8a2b1f; --busy-bg:#f7dfda;
+  color-scheme:light;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#121a15; --surface:#1b261f; --ink:#e8f0ea; --muted:#9fb0a5;
+    --line:#33443a; --accent:#7fd6a2; --accent-ink:#0f1a13; --free:#9be8b8; --free-bg:#1f3a2a; --busy:#f3b3a8; --busy-bg:#4a2620;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#121a15; --surface:#1b261f; --ink:#e8f0ea; --muted:#9fb0a5;
+  --line:#33443a; --accent:#7fd6a2; --accent-ink:#0f1a13; --free:#9be8b8; --free-bg:#1f3a2a; --busy:#f3b3a8; --busy-bg:#4a2620;
+  color-scheme:dark;
+}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{
+  margin:0; min-height:100vh; background:var(--bg); color:var(--ink);
+  font-family:"Atkinson Hyperlegible","Segoe UI",system-ui,sans-serif; line-height:1.5;
+  display:flex; justify-content:center; padding:24px 16px;
+}
+main{width:100%; max-width:440px}
+h1{font-family:Georgia,"Times New Roman",serif; font-size:2rem; margin:0 0 4px; letter-spacing:-.01em}
+p.sub{margin:0 0 24px; color:var(--muted)}
+.panel{background:var(--surface); border:2px solid var(--line); border-radius:14px; padding:20px}
+fieldset{border:0; padding:0; margin:0 0 20px}
+legend{font-weight:700; margin-bottom:10px; padding:0}
+.slots{display:grid; grid-template-columns:repeat(2,1fr); gap:10px}
+.slot input{position:absolute; opacity:0; pointer-events:none}
+.slot label{
+  display:block; text-align:center; padding:16px 0; font-size:1.4rem; font-weight:700;
+  border:2px solid var(--line); border-radius:10px; cursor:pointer; background:var(--bg);
+}
+.slot input:checked + label{border-color:var(--accent); background:var(--accent); color:var(--accent-ink)}
+.slot input:focus-visible + label{outline:3px solid var(--accent); outline-offset:3px}
+button{
+  width:100%; font:inherit; font-size:1.1rem; font-weight:700; padding:14px;
+  border:0; border-radius:10px; background:var(--accent); color:var(--accent-ink); cursor:pointer;
+}
+button:focus-visible{outline:3px solid var(--ink); outline-offset:3px}
+.result{margin-top:20px; padding-top:16px; border-top:2px dashed var(--line)}
+.result .q{margin:0 0 8px; color:var(--muted); font-size:.95rem; min-height:1.4em}
+#resposta{
+  min-height:64px; border-radius:10px; display:flex; align-items:center; justify-content:center;
+  font-size:1.8rem; font-weight:700;
+}
+#resposta.livre{background:var(--free-bg); color:var(--free)}
+#resposta.ocupado{background:var(--busy-bg); color:var(--busy)}
+#confirmacao{margin-top:12px; text-align:center; font-weight:700; font-size:1.1rem; color:var(--free)}
+#confirmacao:empty{display:none}
+#confirmacao.aviso{color:var(--muted); font-weight:400}
+@media (prefers-reduced-motion:no-preference){ #resposta{transition:background .2s} }
+</style>
+</head>
+<body>
+<main>
+  <h1>Sala 1</h1>
+  <p class="sub">Escolha um horário e toque em Reservar.</p>
+
+  <div class="panel">
+    <fieldset>
+      <legend>Horário</legend>
+      <div class="slots">
+        <div class="slot"><input type="radio" name="h" id="h9" value="9"><label for="h9">9h</label></div>
+        <div class="slot"><input type="radio" name="h" id="h10" value="10"><label for="h10">10h</label></div>
+      </div>
+    </fieldset>
+    <button type="button" id="reservar">Reservar</button>
+
+    <div class="result">
+      <p class="q" id="pergunta"></p>
+      <div id="resposta" aria-live="polite"></div>
+      <div id="confirmacao" aria-live="polite"></div>
+    </div>
+  </div>
+</main>
+
+<script>
+  // Disponibilidade da Sala 1: true = livre, false = ocupada
+  var salaLivre = { "9": true, "10": false };
+
+  var btn = document.getElementById("reservar");
+  var confirmacao = document.getElementById("confirmacao");
+  var pergunta = document.getElementById("pergunta");
+  var resposta = document.getElementById("resposta");
+
+  btn.addEventListener("click", function () {
+    var sel = document.querySelector('input[name="h"]:checked');
+    resposta.textContent = "";
+    resposta.className = "";
+    confirmacao.textContent = "";
+    confirmacao.className = "";
+    if (!sel) {
+      pergunta.textContent = "Selecione um horário antes de reservar.";
+      return;
+    }
+    pergunta.textContent = "Sala 1 às " + sel.value + "h:";
+    if (salaLivre[sel.value]) {
+      resposta.textContent = "Livre";
+      resposta.className = "livre";
+      confirmacao.textContent = "✔ Reserva confirmada: Sala 1 às " + sel.value + "h";
+    } else {
+      resposta.textContent = "Ocupado";
+      resposta.className = "ocupado";
+      confirmacao.textContent = "Horário indisponível. Nenhuma reserva foi feita.";
+      confirmacao.className = "aviso";
+    }
+  });
+</script>
+</body>
+</html>
